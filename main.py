@@ -61,7 +61,7 @@ image_dataset = {
                      cfg.PROBLEM.TYPE)
         for x in ('train', 'test')}
 
-print(image_dataset['train'].bm)
+# print(image_dataset['train'].bm.get_id_combination('cat_chair'))
 
 dataloader = {x: get_dataloader(image_dataset[x], shuffle=True, fix_seed=(x == 'test')) for x in ('train', 'test')}
 

@@ -32,7 +32,7 @@ class CrossBenchmark(Benchmark):
         # print('\nget_id_combinations')
         if cls == None:
             clss = None
-        elif type(cls) == str:
+        elif type(cls) == str: # also takes in cross string ex. 'cat_chair'
             clss = cls
 
         with open(self.data_list_path) as f1:
@@ -46,13 +46,13 @@ class CrossBenchmark(Benchmark):
             data_list1 = []
             data_list2 = []
             if self.name != 'SPair71k':
-                for id in data_id:
-                    # print(f"id: {id}") #id: 2008_004259_1_tvmonitor (comes from train.json)
-                    if self.data_dict[id]['cls'] == class1:
+                for id in data_id: #id: 2008_004259_1_tvmonitor (comes from train.json)
+                    # print(f"id: {id}")
+                    if self.data_dict[id]['cls'] == class1:     # find ids from class1
                         data_list1.append(id)
-                    elif self.data_dict[id]['cls'] == class2:
+                    elif self.data_dict[id]['cls'] == class2:   # find ids from class2
                         data_list2.append(id)
-                id_combination = [(i, j) for i in data_list1 for j in data_list2]
+                id_combination = [(i, j) for i in data_list1 for j in data_list2]   # combines two lists, all combinations
                 # id_combination = list(itertools.combinations(data_list, num))
                 length += len(id_combination)
                 id_combination_list.append(id_combination)
