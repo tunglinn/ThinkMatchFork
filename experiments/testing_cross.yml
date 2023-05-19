@@ -61,7 +61,7 @@ TRAIN:
 
   EPOCH_ITERS: 2000  # iterations per epoch
 
-  CLASS: none
+  CLASS: [cat, chair]
 
 # Evaluation settings
 EVAL:

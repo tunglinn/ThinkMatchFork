@@ -23,9 +23,13 @@ class CrossBenchmark(Benchmark):
 
                 length: length of combinations
         """
+
         if cls == None:
             clss = None
         elif type(cls) == str:
+            clss = cls
+        elif type(cls) == list:
+            print('It is a list!')
             clss = cls
 
         with open(self.data_list_path) as f1:
@@ -33,10 +37,15 @@ class CrossBenchmark(Benchmark):
 
         length = 0
         id_combination_list = []
+
+        if type(clss) == list:
+            pass
+
         if clss != None:
             data_list = []
             if self.name != 'SPair71k':
                 for id in data_id:
+                    # print(f"id: {id}") #id: 2008_004259_1_tvmonitor
                     if self.data_dict[id]['cls'] == clss:
                         data_list.append(id)
                 id_combination = list(itertools.combinations(data_list, num))
@@ -49,7 +58,7 @@ class CrossBenchmark(Benchmark):
                 length += len(data_list)
                 id_combination_list.append(data_list)
         else:
-            for clss in self.classes:
+            for clss in self.classes:       # for all classes
                 data_list = []
                 if self.name != 'SPair71k':
                     for id in data_id:
@@ -64,5 +73,5 @@ class CrossBenchmark(Benchmark):
                             data_list.append(id_pair)
                     length += len(data_list)
                     id_combination_list.append(data_list)
-        print(id_combination_list)
+
         return id_combination_list, length
