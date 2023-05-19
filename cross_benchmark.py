@@ -29,12 +29,10 @@ class CrossBenchmark(Benchmark):
                 length: length of combinations
         """
         # print(f'cls: {cls}  type:{type(cls)}')
-        print('\nget_id_combinations')
+        # print('\nget_id_combinations')
         if cls == None:
             clss = None
         elif type(cls) == str:
-            clss = cls
-        elif cls.count('_') > 0:
             clss = cls
 
         with open(self.data_list_path) as f1:
@@ -104,12 +102,10 @@ class CrossBenchmark(Benchmark):
         :param num: int, number of images in each image ID list; for example, 2 for 2GM
         :return: length of combinations
         """
-        print(f'\ncompute_length')
+        # print(f'\ncompute_length')
         if cls == None:
             clss = None
         elif type(cls) == str:
-            clss = cls
-        elif cls.count('_') > 0:
             clss = cls
 
         with open(self.data_list_path) as f1:
@@ -160,9 +156,9 @@ class CrossBenchmark(Benchmark):
                     for id_pair in data_id:
                         if self.data_dict[id_pair[0]]['cls'] == clss:
                             length += 1
-        print(f'length: {length}')
-        print(f'len(datalist_1): {len(data_list1)}')
-        print(f'len(datalist_2): {len(data_list2)}')
+        # print(f'length: {length}')
+        # print(f'len(datalist_1): {len(data_list1)}')
+        # print(f'len(datalist_2): {len(data_list2)}')
         return length
 
     def compute_img_num(self, classes):
@@ -172,7 +168,7 @@ class CrossBenchmark(Benchmark):
         :param classes: list of dataset classes
         :return: list of numbers of images in each class
         """
-        print("\ncompute_img_num")
+        # print("\ncompute_img_num")
         with open(self.data_list_path) as f1:
             data_id = json.load(f1)
         num_list = []
@@ -199,5 +195,58 @@ class CrossBenchmark(Benchmark):
                             img_cache.append(id_pair[1])
                             cls_img_num += 1
                 num_list.append(cls_img_num)
-        print(f'num_list: {num_list}')
+        # print(f'num_list: {num_list}')
         return num_list
+
+    def rand_get_data(self, cls=None, num=2, test=False, shuffle=True):
+        r"""
+        Randomly fetch data for training or test. Implemented by calling ``get_data`` function.
+
+        :param cls: int or str, class of expected data. None for random class
+        :param num: int, number of images; for example, 2 for 2GM
+        :param test: bool, whether the fetched data is used for test; if true, this function will not return ground truth
+        :param shuffle: bool, whether to shuffle the order of keypoints
+        :return:
+                    **data_list**: list of data, like ``[{'img': np.array, 'kpts': coordinates of kpts}, ...]``
+
+                    **perm_mat_dict**: ground truth, like ``{(0,1):scipy.sparse, (0,2):scipy.sparse, ...}``, ``(0,1)`` refers to data pair ``(ids[0],ids[1])``
+
+                    **ids**: list of image ID
+        """
+        # print("\n\n\nrand_get_data")
+        # print(f"\ncls: {cls}")
+        if cls == None:
+            cls = random.randrange(0, len(self.classes))
+            clss = self.classes[cls]
+        elif type(cls) == str:
+            clss = cls
+
+        with open(self.data_list_path) as f1:
+            data_id = json.load(f1)
+
+        data_list = []
+        ids = []
+        if self.name != 'SPair71k':
+            if clss.count('_')>0:
+                class1, class2 = clss.split('_')
+                for id in data_id:
+                    if self.data_dict[id]['cls'] == class1 or self.data_dict[id]['cls'] == class2:
+                        data_list.append(id)
+
+                for objID in random.sample(data_list, num):
+                    ids.append(objID)
+            else:
+
+                for id in data_id:
+                    if self.data_dict[id]['cls'] == clss:
+                        data_list.append(id)
+
+                for objID in random.sample(data_list, num):
+                    ids.append(objID)
+        else:
+            for id in data_id:
+                if self.data_dict[id[0]]['cls'] == clss:
+                    data_list.append(id)
+            ids = random.sample(data_list, 1)[0]
+
+        return self.get_data(ids, test, shuffle)

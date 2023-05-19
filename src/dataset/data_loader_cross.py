@@ -41,7 +41,7 @@ class GMDataset(Dataset):
 
         if self.problem_type == '2GM':
             self.id_combination, self.length = self.bm.get_id_combination(self.cls)
-            print(f'length: {self.length}')
+            # print(f'length: {self.length}')
             self.length_list = []
             for cls in self.classes:
                 cls_length = self.bm.compute_length(cls)
@@ -90,11 +90,12 @@ class GMDataset(Dataset):
         #anno_pair, perm_mat = self.bm.get_pair(self.cls if self.cls is not None else
         #                                       (idx % (cfg.BATCH_SIZE * len(self.classes))) // cfg.BATCH_SIZE)
         cls_num = random.randrange(0, len(self.classes))
-        print(f'self.classes: {self.classes}   cls_num: {cls_num}   length_list: {self.length_list}')
-        print(f'idx%self.length_list[cls_num]: {idx % self.length_list[cls_num]}')
+        # print(f'self.classes: {self.classes}   cls_num: {cls_num}   length_list: {self.length_list}')
+        # print(f'idx%self.length_list[cls_num]: {idx % self.length_list[cls_num]}')
         ids = list(self.id_combination[cls_num][idx % self.length_list[cls_num]])
         anno_pair, perm_mat_, id_list = self.bm.get_data(ids)
         perm_mat = perm_mat_[(0, 1)].toarray()
+
         while min(perm_mat.shape[0], perm_mat.shape[1]) <= 2 or perm_mat.size >= cfg.PROBLEM.MAX_PROB_SIZE > 0:
             anno_pair, perm_mat_, id_list = self.bm.rand_get_data(cls)
             perm_mat = perm_mat_[(0, 1)].toarray()
