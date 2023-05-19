@@ -61,12 +61,13 @@ TRAIN:
 
   EPOCH_ITERS: 2000  # iterations per epoch
 
-  CLASS: [cat, chair]
+  CLASS: cat_chair
 
 # Evaluation settings
 EVAL:
   EPOCH: 14  # epoch to be tested
   SAMPLES: 1000  # number of tested pairs for each class
+  CLASS: cat_chair
 
 # model parameters
 BBGM:

@@ -6,7 +6,7 @@ from datetime import datetime
 from pathlib import Path
 from tensorboardX import SummaryWriter
 
-from src.dataset.data_loader import GMDataset, get_dataloader
+from src.dataset.data_loader_cross import GMDataset, get_dataloader
 from src.displacement_layer import Displacement
 from src.loss_func import *
 from src.evaluation_metric import matching_accuracy
@@ -48,6 +48,7 @@ benchmark = {
                           problem=cfg.PROBLEM.TYPE,
                           obj_resize=cfg.PROBLEM.RESCALE,
                           filter=cfg.PROBLEM.FILTER,
+                          classes=cfg.TRAIN.CLASS,
                           **ds_dict)
         for x in ('train', 'test')}
 
@@ -59,6 +60,9 @@ image_dataset = {
                      cfg.TRAIN.CLASS if x == 'train' else cfg.EVAL.CLASS,
                      cfg.PROBLEM.TYPE)
         for x in ('train', 'test')}
+
+print(image_dataset['train'].bm)
+
 dataloader = {x: get_dataloader(image_dataset[x], shuffle=True, fix_seed=(x == 'test')) for x in ('train', 'test')}
 
 for inputs in dataloader['train']:
