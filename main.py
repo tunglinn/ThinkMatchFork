@@ -6,7 +6,7 @@ from datetime import datetime
 from pathlib import Path
 from tensorboardX import SummaryWriter
 
-from src.dataset.data_loader_cross import GMDataset, get_dataloader
+from src.dataset.data_loader_cross import GMDataset, get_dataloader     # using self defined data_loader_cross class
 from src.displacement_layer import Displacement
 from src.loss_func import *
 from src.evaluation_metric import matching_accuracy
@@ -69,6 +69,6 @@ dataloader = {x: get_dataloader(image_dataset[x], shuffle=True, fix_seed=(x == '
 print('\n\n\nRender pair.')
 for inputs in dataloader['train']:
     pairs = inputs['id_list']
-    print(f'Pairs are: {pairs}')
-    render_pair(pairs[0][0], pairs[1][0])
+    print(f'Pairs are: \n{pairs[0]}\n{pairs[1]}')
+    # render_pair(pairs[0][0], pairs[1][0])
     exit()

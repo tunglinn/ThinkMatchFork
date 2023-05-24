@@ -22,7 +22,7 @@ def add_labels(img_src, img_data):
     padding = 0
     for label, color in zip(labels, colors):
         draw.ellipse((label[1], label[2], label[1] + circle_size, label[2] + circle_size), width=5, fill=color)
-        draw.text((0, 0+padding), label[0], fill=color, stroke_width=2, stroke_fill='green')
+        draw.text((0, 0+padding), label[0], fill=color) # , stroke_width=2, stroke_fill='green'
         padding += 20
     return img_src
 
