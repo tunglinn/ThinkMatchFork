@@ -71,4 +71,3 @@ for inputs in dataloader['train']:
     pairs = inputs['id_list']
     print(f'Pairs are: \n{pairs[0]}\n{pairs[1]}')
     # render_pair(pairs[0][0], pairs[1][0])
-    exit()

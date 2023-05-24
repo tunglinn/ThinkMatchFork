@@ -1,5 +1,4 @@
-from PIL import Image
-from PIL import ImageDraw
+from PIL import Image, ImageDraw, ImageFont
 from bs4 import BeautifulSoup
 import os
 
@@ -18,11 +17,12 @@ def add_labels(img_src, img_data):
     draw = ImageDraw.Draw(img_src)
 
     colors = ['red', 'orange', 'yellow', 'green', 'blue', 'purple', 'brown', 'grey', 'black', 'white']
-    circle_size = 3
+    circle_size = 20
     padding = 0
     for label, color in zip(labels, colors):
         draw.ellipse((label[1], label[2], label[1] + circle_size, label[2] + circle_size), width=5, fill=color)
-        draw.text((0, 0+padding), label[0], fill=color) # , stroke_width=2, stroke_fill='green'
+        draw.text((0, 0+padding), label[0], fill=color)
+        # , stroke_width=2, stroke_fill='green'
         padding += 20
     return img_src
 
@@ -85,3 +85,6 @@ def render_pair(img1, img2):
         data2 = f.read()
     add_labels(img1_src, data1).save('img1.jpg')
     add_labels(img2_src, data2).save('img2.jpg')
+
+
+render_pair('2008_008268_3_bird', '2010_001212_5_boat')

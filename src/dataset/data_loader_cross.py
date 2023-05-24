@@ -96,10 +96,10 @@ class GMDataset(Dataset):
         ids = list(self.id_combination[cls_num][idx % self.length_list[cls_num]])
         # print(f'ids: {ids}')
         anno_pair, perm_mat_, id_list = self.bm.get_data(ids)
-        print(f'id_list: {id_list}') # list may be flipped from ids because get_data sorts ids
+        # print(f'id_list: {id_list}') # list may be flipped from ids because get_data sorts ids
         perm_mat = perm_mat_[(0, 1)].toarray()
 
-        print(f'perm_mat: {perm_mat}')
+        # print(f'perm_mat: {perm_mat}')
         # what does this do???
         while min(perm_mat.shape[0], perm_mat.shape[1]) <= 2 or perm_mat.size >= cfg.PROBLEM.MAX_PROB_SIZE > 0:
             anno_pair, perm_mat_, id_list = self.bm.rand_get_data(cls)
@@ -126,7 +126,7 @@ class GMDataset(Dataset):
 
         pyg_graph1 = self.to_pyg_graph(A1, P1)
         pyg_graph2 = self.to_pyg_graph(A2, P2)
-        print(f'id_list before inserting into ret_dict: {id_list}')
+        # print(f'id_list before inserting into ret_dict: {id_list}')
         ret_dict = {'Ps': [torch.Tensor(x) for x in [P1, P2]],
                     'ns': [torch.tensor(x) for x in [n1, n2]],
                     'es': [torch.tensor(x) for x in [e1, e2]],
@@ -153,7 +153,7 @@ class GMDataset(Dataset):
             feat2 = np.stack([kp['feat'] for kp in anno_pair[1]['kpts']], axis=-1)
             ret_dict['features'] = [torch.Tensor(x) for x in [feat1, feat2]]
 
-        print(f'ret_dict["id_list"] = {ret_dict["id_list"]}')
+        # print(f'ret_dict["id_list"] = {ret_dict["id_list"]}')
         return ret_dict
 
     def get_multi(self, idx, cls):
