@@ -10,6 +10,7 @@ import itertools
 from scipy.sparse import coo_matrix
 from pygmtools.dataset import *
 import csv
+import pandas as pd
 
 
 class CrossBenchmark(Benchmark):
@@ -18,6 +19,12 @@ class CrossBenchmark(Benchmark):
         def __init__(self, name, sets, obj_resize=(256, 256), problem='2GM', filter='intersection', classes=None, **args):
         super().__init__(name, sets, obj_resize, problem, filter, **args)
         self.classes = [classes]"""
+
+    def __init__(self, name, sets, obj_resize=(256, 256), problem='2GM', filter='intersection', **args):
+        super().__init__(name, sets, obj_resize, problem, filter, **args)
+        self.cross_match_file = 'match_test.csv'
+        self.cross_match_path = os.path.join(self.cross_match_file)
+        self.cross_matchings = self.get_cross_matchings()
 
     def get_id_combination(self, cls=None, num=2):
         r"""
@@ -300,6 +307,8 @@ class CrossBenchmark(Benchmark):
             row_list = []
             col_list = []
 
+            cls1 = data_list[id_tuple[0]]['cls']
+            cls2 = data_list[id_tuple[1]]['cls']
             for i, keypoint in enumerate(data_list[id_tuple[0]]['kpts']):
                 for j, _keypoint in enumerate(data_list[id_tuple[1]]['kpts']):
                     if keypoint['labels'] == _keypoint['labels']:
@@ -308,6 +317,10 @@ class CrossBenchmark(Benchmark):
                         if keypoint['labels'] != 'outlier':
                             # if same keypoint, set to 1
                             perm_mat[i, j] = 1
+                    elif self.match_cross_keypoints(keypoint['labels'], _keypoint['labels'], cls1, cls2):
+                        row_list.append(i)
+                        col_list.append(j)
+                        perm_mat[i, j] = 1
 
             # I think we can just add these to the first for loop
             """for i, keypoint in enumerate(data_list[id_tuple[0]]['kpts']):
@@ -381,3 +394,37 @@ class CrossBenchmark(Benchmark):
             return data_list, perm_mat_dict, ids
         else:
             return data_list, ids
+
+    def match_cross_keypoints(self, kpt1, kpt2, cls1, cls2):
+        """ Checks if keypoints match across class categories
+        Args:
+            kpt1: str
+            kpt2: str
+            cls1: str
+            cls2: str
+
+        Return: bool
+        """
+        # print(f'\n\n\nIn match_cross_keypoints evaluating {kpt1} and {kpt2} between {cls1} and {cls2}')
+
+        # print(self.cross_matchings)
+        try:
+            if self.cross_matchings[cls1].index(kpt1) == self.cross_matchings[cls2].index(kpt2):
+                print(f'Found matching: {kpt1} and {kpt2} between {cls1} and {cls2}')
+                return True
+        except ValueError:
+            return False
+
+    def get_cross_matchings(self):
+        """ Creates cross category match dictionary from csv file with columns headers as class categories
+        Return: dictionary
+        """
+        match_dict = {}
+
+        matches = pd.read_csv(self.cross_match_path)
+
+        for cat in matches.columns:
+            match_dict[cat] = matches[cat].tolist()
+
+        # print(match_dict)
+        return match_dict
