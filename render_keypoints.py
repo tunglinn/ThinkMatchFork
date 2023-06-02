@@ -1,6 +1,7 @@
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageFont, ImageColor
 from bs4 import BeautifulSoup
 import os
+import numpy as np
 
 
 def add_labels(img_src, img_data):
@@ -16,15 +17,16 @@ def add_labels(img_src, img_data):
 
     draw = ImageDraw.Draw(img_src)
 
-    colors = ['red', 'orange', 'yellow', 'green', 'blue', 'purple', 'brown', 'grey', 'black', 'white']
-    circle_size = 20
+    colors = get_color_list(len(labels))
+    circle_size = 10
     padding = 0
     for label, color in zip(labels, colors):
         draw.ellipse((label[1], label[2], label[1] + circle_size, label[2] + circle_size), width=5, fill=color)
-        draw.text((0, 0+padding), label[0], fill=color)
+        #draw.text((0, 0+padding), label[0], fill=color)
         # , stroke_width=2, stroke_fill='green'
         padding += 20
     return img_src
+
 
 def render_one(img):
     img_path = os.path.join('data', 'PascalVOC', 'TrainVal', 'VOCdevkit', 'VOC2011', 'JPEGImages', '2008_000043.jpg')
@@ -45,7 +47,7 @@ def render_one(img):
 
     draw = ImageDraw.Draw(img)
 
-    colors = ['red', 'orange', 'yellow', 'green', 'blue', 'purple', 'brown', 'grey', 'black', 'white']
+    colors = get_color_list(len(labels))
     circle_size = 3
     for label, color in zip(labels, colors):
         draw.ellipse((label[1], label[2], label[1]+circle_size, label[2]+circle_size), width=5, fill=color)
@@ -87,4 +89,52 @@ def render_pair(img1, img2):
     add_labels(img2_src, data2).save('img2.jpg')
 
 
-render_pair('2008_008268_3_bird', '2010_001212_5_boat')
+def render_labels(img):
+    img_class = img.split('_')[-1]
+
+    img_labels = img[0:img.rfind('_')]
+
+    if img_labels.count('_') > 1:
+        img_id = img[0:img_labels.rfind('_')]
+    else:
+        img_id = img_labels
+
+    # print(f'img1_id: {img1_id}\nimg1_src: {img1_labels}')
+
+    with open(os.path.join('data', 'PascalVOC', 'annotations', img_class, f'{img_labels}.xml')) as f:
+        img_data = f.read()
+
+    soup_data = BeautifulSoup(img_data, "xml")
+    keypoints = soup_data.find_all('keypoint')
+
+    # print(keypoints)
+
+    labels = []
+    for keypoint in keypoints:
+        labels.append(
+            (keypoint['name'], int(float(keypoint['x'])), int(float(keypoint['y'])), int(float(keypoint['visible']))))
+
+    image = Image.new(mode='RGB', size=(100, len(labels) * 20))
+    draw = ImageDraw.Draw(image)
+
+    colors = get_color_list(len(labels))
+    padding = 0
+    for label, color in zip(labels, colors):
+        draw.text((0, 0 + padding), label[0], fill=color)
+        # , stroke_width=2, stroke_fill='green'
+        padding += 20
+
+    image.save('labels.jpg')
+
+
+def get_color_list(n):
+    color_list = ['maroon', 'crimson', 'darkorange', 'yellow', 'lime', 'steelblue', 'blue', 'rebeccapurple', 'hotpink',
+                  'floralwhite']
+    color_list += color_list
+    colors = color_list[:n]
+    # print(len(colors))
+    return colors
+
+
+render_pair('2008_006948_2_tvmonitor', '2010_002586_4_tvmonitor')
+render_labels('2010_004982_1_tvmonitor')

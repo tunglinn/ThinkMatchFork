@@ -13,7 +13,9 @@ import csv
 
 
 class CrossBenchmark(Benchmark):
-    """def __init__(self, name, sets, obj_resize=(256, 256), problem='2GM', filter='intersection', classes=None, **args):
+    """used to generate cross category datasets like pairs of one cat and one chair
+
+        def __init__(self, name, sets, obj_resize=(256, 256), problem='2GM', filter='intersection', classes=None, **args):
         super().__init__(name, sets, obj_resize, problem, filter, **args)
         self.classes = [classes]"""
 
@@ -213,8 +215,7 @@ class CrossBenchmark(Benchmark):
 
                     **ids**: list of image ID
         """
-        # print("\n\n\nrand_get_data")
-        # print(f"\ncls: {cls}")
+
         if cls == None:
             cls = random.randrange(0, len(self.classes))
             clss = self.classes[cls]
