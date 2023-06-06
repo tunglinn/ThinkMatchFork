@@ -90,18 +90,17 @@ class GMDataset(Dataset):
         #anno_pair, perm_mat = self.bm.get_pair(self.cls if self.cls is not None else
         #                                       (idx % (cfg.BATCH_SIZE * len(self.classes))) // cfg.BATCH_SIZE)
         cls_num = random.randrange(0, len(self.classes))
-        # print(f'self.classes: {self.classes}   cls_num: {cls_num}   length_list: {self.length_list}')
-        # print(f'idx%self.length_list[cls_num]: {idx % self.length_list[cls_num]}')
 
         ids = list(self.id_combination[cls_num][idx % self.length_list[cls_num]])
-        # print(f'ids: {ids}')
+
         anno_pair, perm_mat_, id_list = self.bm.get_data(ids)
         # print(f'id_list: {id_list}') # list may be flipped from ids because get_data sorts ids
         perm_mat = perm_mat_[(0, 1)].toarray()
 
-        # print(f'perm_mat: {perm_mat}')
-        # what does this do???
+        # keeps finding a new pair until there's at least one keypoint that matches across the two
         while min(perm_mat.shape[0], perm_mat.shape[1]) <= 2 or perm_mat.size >= cfg.PROBLEM.MAX_PROB_SIZE > 0:
+            # rand_get_data also calls get_data, which is where the permutation matrix is generated
+            # use get_data to allow cross category matches
             anno_pair, perm_mat_, id_list = self.bm.rand_get_data(cls)
             perm_mat = perm_mat_[(0, 1)].toarray()
 
