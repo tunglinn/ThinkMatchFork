@@ -389,3 +389,37 @@ class CrossBenchmark(Benchmark):
             return data_list, perm_mat_dict, ids
         else:
             return data_list, ids
+
+    def match_cross_keypoints(self, kpt1, kpt2, cls1, cls2):
+        """ Checks if keypoints match across class categories
+        Args:
+            kpt1: str
+            kpt2: str
+            cls1: str
+            cls2: str
+
+        Return: bool
+        """
+        # print(f'\n\n\nIn match_cross_keypoints evaluating {kpt1} and {kpt2} between {cls1} and {cls2}')
+
+        # print(self.cross_matchings)
+        try:
+            if self.cross_matchings[cls1].index(kpt1) == self.cross_matchings[cls2].index(kpt2):
+                print(f'Found matching: {kpt1} and {kpt2} between {cls1} and {cls2}')
+                return True
+        except ValueError:
+            return False
+
+    def get_cross_matchings(self):
+        """ Creates cross category match dictionary from csv file with columns headers as class categories
+        Return: dictionary
+        """
+        match_dict = {}
+
+        matches = pd.read_csv(self.cross_match_path)
+
+        for cat in matches.columns:
+            match_dict[cat] = matches[cat].tolist()
+
+        # print(match_dict)
+        return match_dict
