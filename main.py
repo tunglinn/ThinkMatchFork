@@ -67,7 +67,7 @@ dataloader = {x: get_dataloader(image_dataset[x], shuffle=True, fix_seed=(x == '
 
 
 print('\n\n\nRender pair.')
-for inputs in dataloader['train']:
+for inputs in dataloader['test']:
     pairs = inputs['id_list']
     print(f'Pairs are: \n{pairs[0]}\n{pairs[1]}')
     # render_pair(pairs[0][0], pairs[1][0])

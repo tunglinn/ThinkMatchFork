@@ -380,3 +380,186 @@ class CrossBenchmark(Benchmark):
             return data_list, perm_mat_dict, ids
         else:
             return data_list, ids
+
+    def eval_cls(self, prediction, cls, verbose=False):
+        r"""
+        Evaluate test results and compute matching accuracy and coverage on one specified class.
+
+        :param prediction: list, prediction result on one class, like ``[{'ids': (id1, id2), 'cls': cls, 'permmat': np.array or scipy.sparse},…]``
+        :param cls: str, evaluated class
+        :param verbose: bool, whether to print the result
+        :return: evaluation result on the specified class, including p, r, f1 and their standard deviation and coverage
+        """
+
+        with open(self.data_list_path) as f1:
+            data_id = json.load(f1)
+
+        result = dict()
+        id_cache = []
+        cls_precision = []
+        cls_recall = []
+        cls_f1 = []
+
+        cls_dict = 0
+        pred_cls_dict = 0
+
+        if self.name != 'SPair71k':
+            for key, obj in self.data_dict.items():
+                if (key in data_id) and (obj['cls'] == cls):
+                    cls_dict += 1
+        else:
+            cls_dict = self.compute_img_num([cls])[0]
+
+        for pair_dict in prediction:
+            ids = (pair_dict['ids'][0], pair_dict['ids'][1])
+            if ids not in id_cache:
+                id_cache.append(ids)
+                pred_cls_dict += 1
+                perm_mat = pair_dict['perm_mat']
+                gt_path = os.path.join(self.gt_cache_path, str(ids) + '.npy')
+                gt = np.load(gt_path, allow_pickle=True).item()
+                gt_array = gt.toarray()
+                assert type(perm_mat) == type(gt_array)
+
+                if perm_mat.sum() == 0 or gt_array.sum() == 0:
+                    precision = 1
+                    recall = 1
+                else:
+                    precision = (perm_mat * gt_array).sum() / perm_mat.sum()
+                    recall = (perm_mat * gt_array).sum() / gt_array.sum()
+                if precision == 0 or recall == 0:
+                    f1_score = 0
+                else:
+                    f1_score = (2 * precision * recall) / (precision + recall)
+
+                cls_precision.append(precision)
+                cls_recall.append(recall)
+                cls_f1.append(f1_score)
+
+        result['precision'] = np.mean(cls_precision)
+        result['recall'] = np.mean(cls_recall)
+        result['f1'] = np.mean(cls_f1)
+        result['precision_std'] = np.std(cls_precision)
+        result['recall_std'] = np.std(cls_recall)
+        result['f1_std'] = np.std(cls_f1)
+
+        # removed calculation for coverage temporarily to avoid division by zeo
+        result['coverage'] = -5
+        # result['coverage'] = 2 * pred_cls_dict / (cls_dict * (cls_dict - 1))
+
+        if verbose:
+            print('Class {}: {}'.format(cls, 'p = {:.4f}±{:.4f}, r = {:.4f}±{:.4f}, f1 = {:.4f}±{:.4f}, cvg = {:.4f}' \
+                                        .format(result['precision'], result['precision_std'], result['recall'],
+                                                result['recall_std'], result['f1'], result['f1_std'], result['coverage']
+                                                )))
+        return result
+
+    def eval(self, prediction, classes, verbose=False):
+        r"""
+        Evaluate test results and compute matching accuracy and coverage.
+
+        :param prediction: list, prediction result, like ``[{'ids': (id1, id2), 'cls': cls, 'permmat': np.array or scipy.sparse},…]``
+        :param classes: list of evaluated classes
+        :param verbose: bool, whether to print the result
+        :return: evaluation result in each class and their averages, including p, r, f1 and their standard deviation and coverage
+        """
+
+        with open(self.data_list_path) as f1:
+            data_id = json.load(f1)
+
+        cls_dict = dict()
+        pred_cls_dict = dict()
+        result = dict()
+        id_cache = []
+        cls_precision = dict()
+        cls_recall = dict()
+        cls_f1 = dict()
+
+        for cls in classes:
+            cls_dict[cls] = 0
+            pred_cls_dict[cls] = 0
+            result[cls] = dict()
+            cls_precision[cls] = []
+            cls_recall[cls] = []
+            cls_f1[cls] = []
+
+        if self.name != 'SPair71k':
+            for key, obj in self.data_dict.items():
+                if (key in data_id) and (obj['cls'] in classes):
+                    cls_dict[obj['cls']] += 1
+        else:
+            for cls in classes:
+                cls_dict[cls] = self.compute_img_num([cls])[0]
+
+        for pair_dict in prediction:
+            ids = (pair_dict['ids'][0], pair_dict['ids'][1])
+            if ids not in id_cache:
+                id_cache.append(ids)
+                pred_cls_dict[pair_dict['cls']] += 1
+                perm_mat = pair_dict['perm_mat']
+                gt_path = os.path.join(self.gt_cache_path, str(ids) + '.npy')
+                gt = np.load(gt_path, allow_pickle=True).item()
+                gt_array = gt.toarray()
+                assert type(perm_mat) == type(gt_array)
+
+                if perm_mat.sum() == 0 or gt_array.sum() == 0:
+                    precision = 1
+                    recall = 1
+                else:
+                    precision = (perm_mat * gt_array).sum() / perm_mat.sum()
+                    recall = (perm_mat * gt_array).sum() / gt_array.sum()
+                if precision == 0 or recall == 0:
+                    f1_score = 0
+                else:
+                    f1_score = (2 * precision * recall) / (precision + recall)
+
+                cls_precision[pair_dict['cls']].append(precision)
+                cls_recall[pair_dict['cls']].append(recall)
+                cls_f1[pair_dict['cls']].append(f1_score)
+
+        p_sum = 0
+        r_sum = 0
+        f1_sum = 0
+        p_std_sum = 0
+        r_std_sum = 0
+        f1_std_sum = 0
+
+        for cls in classes:
+            result[cls]['precision'] = np.mean(cls_precision[cls])
+            result[cls]['recall'] = np.mean(cls_recall[cls])
+            result[cls]['f1'] = np.mean(cls_f1[cls])
+            result[cls]['precision_std'] = np.std(cls_precision[cls])
+            result[cls]['recall_std'] = np.std(cls_recall[cls])
+            result[cls]['f1_std'] = np.std(cls_f1[cls])
+            # removed calculation for coverage temporarily to avoid division by zeo
+            result[cls]['coverage'] = -5
+            # result[cls]['coverage'] = 2 * pred_cls_dict[cls] / (cls_dict[cls] * (cls_dict[cls] - 1))
+            p_sum += result[cls]['precision']
+            r_sum += result[cls]['recall']
+            f1_sum += result[cls]['f1']
+            p_std_sum += result[cls]['precision_std']
+            r_std_sum += result[cls]['recall_std']
+            f1_std_sum += result[cls]['f1_std']
+
+        result['mean'] = dict()
+        result['mean']['precision'] = p_sum / len(classes)
+        result['mean']['recall'] = r_sum / len(classes)
+        result['mean']['f1'] = f1_sum / len(classes)
+        result['mean']['precision_std'] = p_std_sum / len(classes)
+        result['mean']['recall_std'] = r_std_sum / len(classes)
+        result['mean']['f1_std'] = f1_std_sum / len(classes)
+
+        if verbose:
+            print('Matching accuracy')
+            for cls in classes:
+                print('{}: {}'.format(cls, 'p = {:.4f}±{:.4f}, r = {:.4f}±{:.4f}, f1 = {:.4f}±{:.4f}, cvg = {:.4f}' \
+                                      .format(result[cls]['precision'], result[cls]['precision_std'],
+                                              result[cls]['recall'], result[cls]['recall_std'], result[cls]['f1'],
+                                              result[cls]['f1_std'], result[cls]['coverage']
+                                              )))
+            print('average accuracy: {}'.format('p = {:.4f}±{:.4f}, r = {:.4f}±{:.4f}, f1 = {:.4f}±{:.4f}' \
+                                                .format(result['mean']['precision'], result['mean']['precision_std'],
+                                                        result['mean']['recall'], result['mean']['recall_std'],
+                                                        result['mean']['f1'], result['mean']['f1_std']
+                                                        )))
+        return result

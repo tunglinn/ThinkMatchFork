@@ -17,7 +17,7 @@ from itertools import combinations, product
 
 class GMDataset(Dataset):
     def __init__(self, name, bm, length, using_all_graphs=False, cls=None, problem='2GM'):
-        print(f"\n\n\nInitializing GMDataset")
+        # print(f"\n\n\nInitializing GMDataset")
         self.name = name
         self.bm = bm
         self.using_all_graphs = using_all_graphs
@@ -49,7 +49,7 @@ class GMDataset(Dataset):
         else:
             self.length = length
 
-        print(f'after initialization: {self.length_list}')
+        # print(f'after initialization: {self.length_list}')
 
     def __len__(self):
         return self.length
@@ -433,7 +433,7 @@ def worker_init_rand(worker_id):
 
 
 def get_dataloader(dataset, fix_seed=True, shuffle=False):
-    print("\n\n\nIn get_dataloader")
+    #print("\n\n\nIn get_dataloader")
     return torch.utils.data.DataLoader(
         dataset, batch_size=cfg.BATCH_SIZE, shuffle=shuffle, num_workers=cfg.DATALOADER_NUM, collate_fn=collate_fn,
         pin_memory=False, worker_init_fn=worker_init_fix if fix_seed else worker_init_rand
