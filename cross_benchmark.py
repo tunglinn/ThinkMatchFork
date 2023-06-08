@@ -26,6 +26,15 @@ class CrossBenchmark(Benchmark):
         self.cross_match_path = os.path.join(self.cross_match_file)
         self.cross_matchings = self.get_cross_matchings()
 
+        print(f'self.classes before: {self.classes}')
+
+        # use in future
+        # self.classes = self.classes + [f'{cls[0]}_{cls[1]}' for cls in list(itertools.combinations(self.classes, 2))]
+
+        # use as building up matchings
+        self.classes = self.classes + ['cat_dog', 'aeroplane_bird', 'car_dog']
+        print(f'self.classes after: {self.classes}')
+
     def get_id_combination(self, cls=None, num=2):
         r"""
         Get the combination of images and length of combinations in specified class.
@@ -39,54 +48,70 @@ class CrossBenchmark(Benchmark):
         """
         # print(f'cls: {cls}  type:{type(cls)}')
         # print('\nget_id_combinations')
-        if cls == None:
-            clss = None
-        elif type(cls) == str: # also takes in cross string ex. 'cat_chair'
-            clss = cls
 
         with open(self.data_list_path) as f1:
             data_id = json.load(f1)
         length = 0
         id_combination_list = []
 
-        if clss.count('_') > 0:
-            class1, class2 = clss.split('_')
-            #print(f'class1: {class1}   class2: {class2}')
-            data_list1 = []
-            data_list2 = []
-            if self.name != 'SPair71k':
-                for id in data_id: #id: 2008_004259_1_tvmonitor (comes from train.json)
-                    # print(f"id: {id}")
-                    if self.data_dict[id]['cls'] == class1:     # find ids from class1
-                        data_list1.append(id)
-                    elif self.data_dict[id]['cls'] == class2:   # find ids from class2
-                        data_list2.append(id)
-                id_combination = [(i, j) for i in data_list1 for j in data_list2]   # combines two lists, all combinations
-                # id_combination = list(itertools.combinations(data_list, num))
-                length += len(id_combination)
-                id_combination_list.append(id_combination)
+        if cls == None:
+            for clss in self.classes:  # for all classes
+                data_list = []
+                if self.name != 'SPair71k':
+                    if '_' in clss:
+                        class1, class2 = clss.split('_')
+                        # print(f'class1: {class1}   class2: {class2}')
+                        data_list1 = []
+                        data_list2 = []
+                        for id in data_id:  # id: 2008_004259_1_tvmonitor (comes from train.json)
+                            # print(f"id: {id}")
+                            if self.data_dict[id]['cls'] == class1:  # find ids from class1
+                                data_list1.append(id)
+                            elif self.data_dict[id]['cls'] == class2:  # find ids from class2
+                                data_list2.append(id)
+                        id_combination = [(i, j) for i in data_list1 for j in
+                                          data_list2]  # combines two lists, all combinations
+                        # id_combination = list(itertools.combinations(data_list, num))
+                        length += len(id_combination)
+                        id_combination_list.append(id_combination)
+                    else:
+                        for id in data_id:
+                            if self.data_dict[id]['cls'] == clss:
+                                data_list.append(id)
+                        id_combination = list(itertools.combinations(data_list, num))
+                        length += len(id_combination)
+                        id_combination_list.append(id_combination)
+                else:
+                    for id_pair in data_id:
+                        if self.data_dict[id_pair[0]]['cls'] == clss:
+                            data_list.append(id_pair)
+                    length += len(data_list)
+                    id_combination_list.append(data_list)
+        elif type(cls) == str: # also takes in cross string ex. 'cat_chair'
+            clss = cls
+            if '_' in clss:
+                class1, class2 = clss.split('_')
+                # print(f'class1: {class1}   class2: {class2}')
+                data_list1 = []
+                data_list2 = []
+                if self.name != 'SPair71k':
+                    for id in data_id:  # id: 2008_004259_1_tvmonitor (comes from train.json)
+                        # print(f"id: {id}")
+                        if self.data_dict[id]['cls'] == class1:  # find ids from class1
+                            data_list1.append(id)
+                        elif self.data_dict[id]['cls'] == class2:  # find ids from class2
+                            data_list2.append(id)
+                    id_combination = [(i, j) for i in data_list1 for j in
+                                      data_list2]  # combines two lists, all combinations
+                    # id_combination = list(itertools.combinations(data_list, num))
+                    length += len(id_combination)
+                    id_combination_list.append(id_combination)
 
-        elif clss != None:
-            data_list = []
-            if self.name != 'SPair71k':
-                for id in data_id:
-                    # print(f"id: {id}") #id: 2008_004259_1_tvmonitor
-                    if self.data_dict[id]['cls'] == clss:
-                        data_list.append(id)
-                id_combination = list(itertools.combinations(data_list, num))
-                length += len(id_combination)
-                id_combination_list.append(id_combination)
             else:
-                for id_pair in data_id:
-                    if self.data_dict[id_pair[0]]['cls'] == clss:
-                        data_list.append(id_pair)
-                length += len(data_list)
-                id_combination_list.append(data_list)
-        else:
-            for clss in self.classes:       # for all classes
                 data_list = []
                 if self.name != 'SPair71k':
                     for id in data_id:
+                        # print(f"id: {id}") #id: 2008_004259_1_tvmonitor
                         if self.data_dict[id]['cls'] == clss:
                             data_list.append(id)
                     id_combination = list(itertools.combinations(data_list, num))
@@ -98,6 +123,7 @@ class CrossBenchmark(Benchmark):
                             data_list.append(id_pair)
                     length += len(data_list)
                     id_combination_list.append(data_list)
+
         with open('pairs', 'w') as f:
             write = csv.writer(f)
             write.writerows(id_combination_list)
@@ -112,47 +138,11 @@ class CrossBenchmark(Benchmark):
         :return: length of combinations
         """
         # print(f'\ncompute_length')
-        if cls == None:
-            clss = None
-        elif type(cls) == str:
-            clss = cls
 
         with open(self.data_list_path) as f1:
             data_id = json.load(f1)
-
         length = 0
-        #print(f'cls: {cls}')
-        if clss.count('_') > 0:
-            #print(f'\n\n\ncompute_length:\nclss: {clss}')
-            class1, class2 = clss.split('_')
-
-            data_list1 = []
-            data_list2 = []
-            if self.name != 'SPair71k':
-                for id in data_id:
-                    # print(f"id: {id}") #id: 2008_004259_1_tvmonitor (comes from train.json)
-                    if self.data_dict[id]['cls'] == class1:
-                        data_list1.append(id)
-                    elif self.data_dict[id]['cls'] == class2:
-                        data_list2.append(id)
-                id_combination = [(i, j) for i in data_list1 for j in data_list2]
-                # id_combination = list(itertools.combinations(data_list, num))
-                length += len(id_combination)
-
-        if clss != None:
-            if self.name != 'SPair71k':
-                data_list = []
-                for id in data_id:
-                    if self.data_dict[id]['cls'] == clss:
-                        data_list.append(id)
-                id_combination = list(itertools.combinations(data_list, num))
-                length += len(id_combination)
-            else:
-                for id_pair in data_id:
-                    if self.data_dict[id_pair[0]]['cls'] == clss:
-                        length += 1
-
-        else:
+        if cls == None:
             for clss in self.classes:
                 if self.name != 'SPair71k':
                     data_list = []
@@ -165,6 +155,39 @@ class CrossBenchmark(Benchmark):
                     for id_pair in data_id:
                         if self.data_dict[id_pair[0]]['cls'] == clss:
                             length += 1
+        elif type(cls) == str:
+            clss = cls
+            # print(f'cls: {cls}')
+            if '_' in clss:
+                # print(f'\n\n\ncompute_length:\nclss: {clss}')
+                class1, class2 = clss.split('_')
+
+                data_list1 = []
+                data_list2 = []
+                if self.name != 'SPair71k':
+                    for id in data_id:
+                        # print(f"id: {id}") #id: 2008_004259_1_tvmonitor (comes from train.json)
+                        if self.data_dict[id]['cls'] == class1:
+                            data_list1.append(id)
+                        elif self.data_dict[id]['cls'] == class2:
+                            data_list2.append(id)
+                    id_combination = [(i, j) for i in data_list1 for j in data_list2]
+                    # id_combination = list(itertools.combinations(data_list, num))
+                    length += len(id_combination)
+
+            else:
+                if self.name != 'SPair71k':
+                    data_list = []
+                    for id in data_id:
+                        if self.data_dict[id]['cls'] == clss:
+                            data_list.append(id)
+                    id_combination = list(itertools.combinations(data_list, num))
+                    length += len(id_combination)
+                else:
+                    for id_pair in data_id:
+                        if self.data_dict[id_pair[0]]['cls'] == clss:
+                            length += 1
+
         # print(f'length: {length}')
         # print(f'len(datalist_1): {len(data_list1)}')
         # print(f'len(datalist_2): {len(data_list2)}')
@@ -184,15 +207,21 @@ class CrossBenchmark(Benchmark):
         for clss in classes:   ## idk why
             cls_img_num = 0
             if self.name != 'SPair71k':
-                #print(f'clss: {clss}')
-                class1, class2 = clss.split('_')
-                #print(f'class1: {class1}   class2: {class2}')
-                for id in data_id:
-                    if self.data_dict[id]['cls'] == class1:
-                        cls_img_num += 1
-                    elif self.data_dict[id]['cls'] == class2:
-                        cls_img_num += 1
-                num_list.append(cls_img_num)
+                if '_' in clss:
+                    #print(f'clss: {clss}')
+                    class1, class2 = clss.split('_')
+                    #print(f'class1: {class1}   class2: {class2}')
+                    for id in data_id:
+                        if self.data_dict[id]['cls'] == class1:
+                            cls_img_num += 1
+                        elif self.data_dict[id]['cls'] == class2:
+                            cls_img_num += 1
+                    num_list.append(cls_img_num)
+                else:
+                    for id in data_id:
+                        if self.data_dict[id]['cls'] == clss:
+                            cls_img_num += 1
+                    num_list.append(cls_img_num)
             else:
                 img_cache = []
                 for id_pair in data_id:
@@ -236,7 +265,7 @@ class CrossBenchmark(Benchmark):
         data_list = []
         ids = []
         if self.name != 'SPair71k':
-            if clss.count('_')>0:
+            if '_' in clss:
                 class1, class2 = clss.split('_')
                 for id in data_id:
                     if self.data_dict[id]['cls'] == class1 or self.data_dict[id]['cls'] == class2:
@@ -318,7 +347,7 @@ class CrossBenchmark(Benchmark):
                         if keypoint['labels'] != 'outlier':
                             # if same keypoint, set to 1
                             perm_mat[i, j] = 1
-                    elif self.match_cross_keypoints(keypoint['labels'], _keypoint['labels'], cls1, cls2):
+                    elif cls1 != cls2 and self.match_cross_keypoints(keypoint['labels'], _keypoint['labels'], cls1, cls2):
                         row_list.append(i)
                         col_list.append(j)
                         perm_mat[i, j] = 1

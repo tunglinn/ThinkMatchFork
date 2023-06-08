@@ -136,5 +136,5 @@ def get_color_list(n):
     return colors
 
 
-render_pair('2008_006948_2_tvmonitor', '2010_002586_4_tvmonitor')
+render_pair('2010_002807_3_car', '2010_004239_1_car')
 render_labels('2010_004982_1_tvmonitor')

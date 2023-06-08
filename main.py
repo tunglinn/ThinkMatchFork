@@ -65,7 +65,7 @@ image_dataset = {
 
 dataloader = {x: get_dataloader(image_dataset[x], shuffle=True, fix_seed=(x == 'test')) for x in ('train', 'test')}
 
-
+exit(1)
 print('\n\n\nRender pair.')
 for inputs in dataloader['test']:
     pairs = inputs['id_list']
